@@ -5,15 +5,24 @@ import (
     _ "github.com/lib/pq"
 )
 
-type Storer interface {
+type UserStorer interface {
     CreateUser(name string, email string, country string) error
     GetUser(id int64) (*User, error)
     UpdateUser(user *User) error
     DeleteUser(id int64) error
+    GetUsers() ([]*User, error)
+}
+
+type ExpenseStorer interface {
     CreateExpense(userId int64, amount int64, description string) error
     GetExpense(expenseId int64) error
     UpdateExpense(expenseId int64, amount int64, description string) error
     DeleteExpense(expenseId int64) error
+}
+
+type Storer interface {
+    UserStorer
+    ExpenseStorer
 }
 
 type PostgresUserStore struct {
@@ -38,18 +47,18 @@ func NewPostgresUserStore() (*PostgresUserStore, error) {
 func (s *PostgresUserStore) Migrate() error {
     query := `
     CREATE TABLE IF NOT EXISTS users (
-    id SERIAL PRIMARY KEY,
-    name varchar(255) NOT NULL,
-    email varchar(255) NOT NULL,
-    country varchar(255) NOT NULL
+        id SERIAL PRIMARY KEY,
+        name varchar(255) NOT NULL,
+        email varchar(255) NOT NULL,
+        country varchar(255) NOT NULL
     );
 
     CREATE TABLE IF NOT EXISTS expenses (
-    id SERIAL PRIMARY KEY,
-    user_id int NOT NULL,
-    amount int NOT NULL,
-    description varchar(255) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users (id)
+        id SERIAL PRIMARY KEY,
+        user_id int NOT NULL,
+        amount int NOT NULL,
+        description varchar(255) NOT NULL,
+        FOREIGN KEY (user_id) REFERENCES users (id)
     );
 
     ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;

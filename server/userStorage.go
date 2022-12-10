@@ -22,6 +22,26 @@ func (s *PostgresUserStore) GetUser(id int64) (*User, error) {
 	return user, nil
 }
 
+func (s *PostgresUserStore) GetUsers() ([]*User, error) {
+	query := `SELECT id, name, email, country  FROM users;`
+	rows, err := s.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+
+	users := []*User{}
+	for rows.Next() {
+		user := &User{}
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.Country)
+		if err != nil {
+			return nil, err
+		}
+		users = append(users, user)
+	}
+
+	return users, nil
+}
+
 func (s *PostgresUserStore) UpdateUser(user *User) error {
 	query := `UPDATE users SET name = $1, email = $2, country = $3 WHERE id = $4;`
 

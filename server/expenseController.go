@@ -39,18 +39,18 @@ func (s *APIServer) handleGetExpense(w http.ResponseWriter, r *http.Request) err
 }
 
 func (s *APIServer) handleCreateExpense(w http.ResponseWriter, r *http.Request) error {
-    createExpenseReq :=  &CreateExpenseRequest{}
-    err := json.NewDecoder(r.Body).Decode(createExpenseReq)
-    if err != nil {
-        return err
-    }
+	createExpenseReq := &CreateExpenseRequest{}
+	err := json.NewDecoder(r.Body).Decode(createExpenseReq)
+	if err != nil {
+		return err
+	}
 
-    err = s.UserStorer.CreateExpense(createExpenseReq.UserId, createExpenseReq.Amount, createExpenseReq.Description)
-    if err != nil {
-        return err 
-    }
+	err = s.UserStorer.CreateExpense(createExpenseReq.UserId, createExpenseReq.Amount, createExpenseReq.Description)
+	if err != nil {
+		return err
+	}
 
-    return WriteJson(w, http.StatusCreated, nil)
+	return WriteJson(w, http.StatusCreated, nil)
 }
 
 func (s *APIServer) handleUpdateExpense(w http.ResponseWriter, r *http.Request) error {

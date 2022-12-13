@@ -10,13 +10,13 @@ import (
 
 type APIServer struct {
 	listenAddr string
-	UserStorer Storer
+	Storer     Storer
 }
 
 func NewAPIServer(listenAddr string, userStorer Storer) *APIServer {
 	return &APIServer{
 		listenAddr: listenAddr,
-		UserStorer: userStorer,
+		Storer:     userStorer,
 	}
 }
 

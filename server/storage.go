@@ -15,7 +15,7 @@ type UserStorer interface {
 
 type ExpenseStorer interface {
     CreateExpense(userId int64, amount int64, description string) error
-    GetExpense(expenseId int64) error
+    GetExpensesByUser(userId int64) ([]Expense, error)
     UpdateExpense(expenseId int64, amount int64, description string) error
     DeleteExpense(expenseId int64) error
 }
@@ -25,12 +25,12 @@ type Storer interface {
     ExpenseStorer
 }
 
-type PostgresUserStore struct {
+type PostgresStore struct {
     db *sql.DB
 }
 
-func NewPostgresUserStore() (*PostgresUserStore, error) {
-    db, err := sql.Open("postgres", "postgres://postgres:postgres@localhost:5432/postgres?sslmode=disable")
+func NewPostgresStore(dbString *string) (*PostgresStore, error) {
+    db, err := sql.Open("postgres", *dbString)
     if err != nil {
         return nil, err
     }
@@ -39,12 +39,12 @@ func NewPostgresUserStore() (*PostgresUserStore, error) {
         return nil, err
     }
 
-    return &PostgresUserStore{
+    return &PostgresStore{
         db: db,
     }, nil
 }
 
-func (s *PostgresUserStore) Migrate() error {
+func (s *PostgresStore) Migrate() error {
     query := `
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
@@ -67,4 +67,3 @@ func (s *PostgresUserStore) Migrate() error {
     _, err := s.db.Exec(query)
     return err
 }
-

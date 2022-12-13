@@ -41,7 +41,7 @@ func (s *APIServer) handleGetUser(w http.ResponseWriter, r *http.Request) error 
 		return fmt.Errorf("invalid id: %s", id)
 	}
 
-	user, err := s.UserStorer.GetUser(int64(idAsStr))
+	user, err := s.Storer.GetUser(int64(idAsStr))
 	if err != nil {
 		return err
 	}
@@ -57,7 +57,7 @@ func (s *APIServer) handleCreateUser(w http.ResponseWriter, r *http.Request) err
 		return WriteJson(w, http.StatusBadRequest, apiError{Err: err.Error()})
 	}
 
-	err = s.UserStorer.CreateUser(creatUserReq.Name, creatUserReq.Email, creatUserReq.Country)
+	err = s.Storer.CreateUser(creatUserReq.Name, creatUserReq.Email, creatUserReq.Country)
 	if err != nil {
 		return WriteJson(w, http.StatusBadRequest, apiError{Err: err.Error()})
 	}
@@ -79,7 +79,7 @@ func (s *APIServer) handleUpdateUser(w http.ResponseWriter, r *http.Request) err
 		return fmt.Errorf("invalid id: %s", id)
 	}
 
-	user, err := s.UserStorer.GetUser(int64(idAsStr))
+	user, err := s.Storer.GetUser(int64(idAsStr))
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (s *APIServer) handleUpdateUser(w http.ResponseWriter, r *http.Request) err
 	user.Email = updateUserReq.Email
 	user.Country = updateUserReq.Country
 
-	err = s.UserStorer.UpdateUser(user)
+	err = s.Storer.UpdateUser(user)
 	if err != nil {
 		return err
 	}
@@ -104,7 +104,7 @@ func (s *APIServer) handleDeleteUser(w http.ResponseWriter, r *http.Request) err
 		return fmt.Errorf("invalid id: %s", id)
 	}
 
-	err = s.UserStorer.DeleteUser(int64(idAsStr))
+	err = s.Storer.DeleteUser(int64(idAsStr))
 	if err != nil {
 		return err
 	}

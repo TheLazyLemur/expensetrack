@@ -1,6 +1,6 @@
 package main
 
-func (s *PostgresUserStore) CreateUser(name string, email string, country string) error {
+func (s *PostgresStore) CreateUser(name string, email string, country string) error {
 	query := `
 		INSERT INTO users (name, email, country) VALUES ($1, $2, $3);
 	`
@@ -8,7 +8,7 @@ func (s *PostgresUserStore) CreateUser(name string, email string, country string
 	return err
 }
 
-func (s *PostgresUserStore) GetUser(id int64) (*User, error) {
+func (s *PostgresStore) GetUser(id int64) (*User, error) {
 	query := `SELECT id, name, email, country FROM users WHERE id = $1;`
 
 	row := s.db.QueryRow(query, id)
@@ -22,7 +22,7 @@ func (s *PostgresUserStore) GetUser(id int64) (*User, error) {
 	return user, nil
 }
 
-func (s *PostgresUserStore) GetUsers() ([]*User, error) {
+func (s *PostgresStore) GetUsers() ([]*User, error) {
 	query := `SELECT id, name, email, country  FROM users;`
 	rows, err := s.db.Query(query)
 	if err != nil {
@@ -42,14 +42,14 @@ func (s *PostgresUserStore) GetUsers() ([]*User, error) {
 	return users, nil
 }
 
-func (s *PostgresUserStore) UpdateUser(user *User) error {
+func (s *PostgresStore) UpdateUser(user *User) error {
 	query := `UPDATE users SET name = $1, email = $2, country = $3 WHERE id = $4;`
 
 	_, err := s.db.Exec(query, user.Name, user.Email, user.Country, user.ID)
 	return err
 }
 
-func (s *PostgresUserStore) DeleteUser(id int64) error {
+func (s *PostgresStore) DeleteUser(id int64) error {
 	query := `DELETE FROM users WHERE id = $1;`
 	_, err := s.db.Exec(query, id)
 	return err

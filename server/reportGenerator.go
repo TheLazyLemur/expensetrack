@@ -1,33 +1,36 @@
 package main
 
 import (
-	"fmt"
-	"log"
+    "fmt"
+    "log"
 )
 
-func GenerateReport() {
-	userStore, err := NewPostgresUserStore()
-	if err != nil {
-		log.Fatal(err)
-	}
+func (s *BackgroundServer) GenerateReport() {
+    if reportMutex.TryLock() {
+        log.Println("Report generation started...")
 
-	if reportMutex.TryLock() {
-		log.Println("Report generation started...")
+        users, err := s.Storer.GetUsers()
+        if err != nil {
+            fmt.Println(err.Error())
+            return
+        }
 
-		users, err := userStore.GetUsers()
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+        userIdToExpenses := make(map[int][]Expense)
 
-		for _, user := range users {
-			fmt.Println(user)
-		}
+        for _, user := range users {
+            expenses, err := s.Storer.GetExpensesByUser(user.ID)
+            if err != nil {
+                fmt.Println(err.Error())
+                return
+            }
 
-		log.Println("Report generation completed...")
+            userIdToExpenses[int(user.ID)] = expenses
+        }
 
-		reportMutex.Unlock()
-	} else {
-		return
-	}
+        log.Println("Report generation completed...")
+
+        reportMutex.Unlock()
+    } else {
+        return
+    }
 }

@@ -23,6 +23,7 @@ func NewAPIServer(listenAddr string, userStorer Storer) *APIServer {
 func (s *APIServer) Run() error {
 	router := mux.NewRouter()
 
+	router.HandleFunc("/health", makeHttpHandleFunc(s.healthCheck))
 	router.HandleFunc("/users", makeHttpHandleFunc(s.handleUser))
 	router.HandleFunc("/users/{id}", makeHttpHandleFunc(s.handleUserById))
 	router.HandleFunc("/expenses", makeHttpHandleFunc(s.handleExpense))
@@ -30,6 +31,16 @@ func (s *APIServer) Run() error {
 
 	log.Println("Starting API server on", s.listenAddr)
 	return http.ListenAndServe(s.listenAddr, router)
+}
+
+func (s *APIServer) healthCheck(w http.ResponseWriter, r *http.Request) error{
+	err := s.Storer.CheckConnection()
+	if err != nil {
+		return err
+	}
+
+	WriteJson(w, http.StatusOK, "healthy")
+	return nil
 }
 
 func WriteJson(w http.ResponseWriter, status int, v any) error {

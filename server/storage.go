@@ -1,51 +1,61 @@
 package main
 
 import (
-    "database/sql"
-    _ "github.com/lib/pq"
+	"database/sql"
+	_ "github.com/lib/pq"
 )
 
 type UserStorer interface {
-    CreateUser(name string, email string, country string) error
-    GetUser(id int64) (*User, error)
-    UpdateUser(user *User) error
-    DeleteUser(id int64) error
-    GetUsers() ([]*User, error)
+	CreateUser(name string, email string, country string) error
+	GetUser(id int64) (*User, error)
+	UpdateUser(user *User) error
+	DeleteUser(id int64) error
+	GetUsers() ([]*User, error)
 }
 
 type ExpenseStorer interface {
-    CreateExpense(userId int64, amount int64, description string) error
-    GetExpensesByUser(userId int64) ([]Expense, error)
-    UpdateExpense(expenseId int64, amount int64, description string) error
-    DeleteExpense(expenseId int64) error
+	CreateExpense(userId int64, amount int64, description string) error
+	GetExpensesByUser(userId int64) ([]Expense, error)
+	UpdateExpense(expenseId int64, amount int64, description string) error
+	DeleteExpense(expenseId int64) error
+}
+
+type DbFunctions interface {
+	CheckConnection() error
 }
 
 type Storer interface {
-    UserStorer
-    ExpenseStorer
+	UserStorer
+	ExpenseStorer
+	DbFunctions
 }
 
 type PostgresStore struct {
-    db *sql.DB
+	db *sql.DB
+}
+
+func (s *PostgresStore) CheckConnection() error{
+	err := s.db.Ping()
+	return err
 }
 
 func NewPostgresStore(dbString *string) (*PostgresStore, error) {
-    db, err := sql.Open("postgres", *dbString)
-    if err != nil {
-        return nil, err
-    }
+	db, err := sql.Open("postgres", *dbString)
+	if err != nil {
+		return nil, err
+	}
 
-    if err := db.Ping(); err != nil {
-        return nil, err
-    }
+	if err := db.Ping(); err != nil {
+		return nil, err
+	}
 
-    return &PostgresStore{
-        db: db,
-    }, nil
+	return &PostgresStore{
+		db: db,
+	}, nil
 }
 
 func (s *PostgresStore) Migrate() error {
-    query := `
+	query := `
     CREATE TABLE IF NOT EXISTS users (
         id SERIAL PRIMARY KEY,
         name varchar(255) NOT NULL,
@@ -64,6 +74,6 @@ func (s *PostgresStore) Migrate() error {
     ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `
-    _, err := s.db.Exec(query)
-    return err
+	_, err := s.db.Exec(query)
+	return err
 }

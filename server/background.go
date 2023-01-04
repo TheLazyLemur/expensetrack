@@ -13,7 +13,7 @@ func NewBackgroundServer(userStorer Storer) *BackgroundServer {
 }
 
 func (s *BackgroundServer) StartbackgroundTasks() {
-	reportTicker := time.NewTicker(5 * time.Second)
+	reportTicker := time.NewTicker(3 * time.Second)
 
 	go func() {
 		for range reportTicker.C {

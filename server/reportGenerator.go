@@ -6,31 +6,31 @@ import (
 )
 
 func (s *BackgroundServer) GenerateReport() {
-	if reportMutex.TryLock() {
-		log.Println("Report generation started...")
+    if reportMutex.TryLock() {
+        defer reportMutex.Unlock()
+        log.Println("Report generation started...")
 
-		users, err := s.Storer.GetUsers()
-		if err != nil {
-			fmt.Println(err.Error())
-			return
-		}
+        users, err := s.Storer.GetUsers()
+        if err != nil {
+            fmt.Println(err.Error())
+            return
+        }
 
-		userIdToExpenses := make(map[int64][]Expense)
+        userIdToExpenses := make(map[int64][]Expense)
 
-		for _, user := range users {
-			expenses, err := s.Storer.GetExpensesByUser(user.ID)
-			if err != nil {
-				fmt.Println(err.Error())
-				return
-			}
+        for _, user := range users {
+            expenses, err := s.Storer.GetExpensesByUser(user.ID)
+            if err != nil {
+                fmt.Println(err.Error())
+                return
+            }
 
-			userIdToExpenses[user.ID] = expenses
-		}
+            userIdToExpenses[user.ID] = expenses
+        }
 
-		log.Println("Report generation completed...")
-
-		reportMutex.Unlock()
-	} else {
-		return
-	}
+        log.Println("Report generation completed...")
+    } else {
+        log.Println("Lock is curretnly held")
+        return
+    }
 }

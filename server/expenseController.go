@@ -3,7 +3,12 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
+	"os"
+	"strconv"
+
+	"github.com/gorilla/mux"
 )
 
 func (s *APIServer) handleExpense(w http.ResponseWriter, r *http.Request) error {
@@ -35,7 +40,20 @@ func (s *APIServer) handleExpenseById(w http.ResponseWriter, r *http.Request) er
 }
 
 func (s *APIServer) handleGetExpense(w http.ResponseWriter, r *http.Request) error {
-	panic("not implemented")
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	idAsStr, err := strconv.Atoi(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %s", id)
+	}
+
+	expense, err := s.Storer.GetExpense(int64(idAsStr))
+	if err != nil {
+		return err
+	}
+
+	return WriteJson(w, http.StatusOK, expense)
 }
 
 func (s *APIServer) handleCreateExpense(w http.ResponseWriter, r *http.Request) error {
@@ -55,9 +73,9 @@ func (s *APIServer) handleCreateExpense(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *APIServer) handleUpdateExpense(w http.ResponseWriter, r *http.Request) error {
-    updateExpenseRequest := &UpdateExpenseRequest{}
+	updateExpenseRequest := &UpdateExpenseRequest{}
 
-    err := json.NewDecoder(r.Body).Decode(updateExpenseRequest)
+	err := json.NewDecoder(r.Body).Decode(updateExpenseRequest)
 	if err != nil {
 		return err
 	}
@@ -66,9 +84,45 @@ func (s *APIServer) handleUpdateExpense(w http.ResponseWriter, r *http.Request) 
 }
 
 func (s *APIServer) handleDeleteExpense(w http.ResponseWriter, r *http.Request) error {
-	panic("not implemented")
+	vars := mux.Vars(r)
+	id := vars["id"]
+
+	idAsStr, err := strconv.Atoi(id)
+	if err != nil {
+		return fmt.Errorf("invalid id: %s", id)
+	}
+
+	err = s.Storer.DeleteExpense(int64(idAsStr))
+	if err != nil {
+		return err
+	}
+
+	return WriteJson(w, http.StatusOK, nil)
 }
 
 func (s *APIServer) handleUploadExpenseReceipt(w http.ResponseWriter, r *http.Request) error {
+	r.ParseMultipartForm(1024 * 1024 * 10)
+
+	file, _, err := r.FormFile("recipt")
+	if err != nil {
+		return err 	
+	}
+	
+	defer file.Close()
+
+	id := GenerateUuid()
+
+	f, err := os.Create("./recipts/" + id)
+	if err != nil {
+		return err 	
+	}
+
+	defer f.Close()
+
+	if _, err = io.Copy(f, file); err != nil {
+		return err
+	}
+
 	panic("not implemented")
 }
+

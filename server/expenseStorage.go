@@ -8,8 +8,25 @@ func (s *PostgresStore) CreateExpense(userId int64, amount int64, description st
     return err
 }
 
+func (s *PostgresStore) GetExpense(expenseId int64) (*Expense, error) {
+    query := `
+    SELECT * FROM expenses WHERE id = $1;
+    `
+    row := s.db.QueryRow(query, expenseId)
+    expense := Expense{}
+
+    err := row.Scan(&expense.ID, &expense.UserId, &expense.Amount, &expense.Description, &expense.CreatedAt)
+    if err != nil {
+        return nil, err
+    }
+
+    return &expense, nil
+}
+
+
 func (s *PostgresStore) GetExpensesByUser(userId int64) ([]Expense, error) {
-    query := ` SELECT id, user_id, amount, description, created_at FROM expenses WHERE user_id = $1;
+    query := `
+    SELECT id, user_id, amount, description, created_at FROM expenses WHERE user_id = $1;
     `
     rows, err := s.db.Query(query, userId)
     if err != nil {
@@ -45,4 +62,8 @@ func (s *PostgresStore) DeleteExpense(expenseId int64) error {
     `
     _, err := s.db.Exec(query, expenseId)
     return err
+}
+
+func (s *PostgresStore) StoreRecipt(expenseId int64) error {
+    panic("Not implemented")
 }

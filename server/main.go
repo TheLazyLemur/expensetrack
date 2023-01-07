@@ -2,12 +2,16 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"sync"
 )
 
 var (
 	reportMutex sync.Mutex
+	logger Logger = Logger{
+		pkg: "main",
+	}
 )
 
 func main() {
@@ -19,6 +23,8 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	fmt.Printf("postgresStore.db: %v\n", postgresStore.db)
 
 	if err := postgresStore.Migrate(); err != nil {
 		log.Fatal(err)

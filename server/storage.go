@@ -15,9 +15,11 @@ type UserStorer interface {
 
 type ExpenseStorer interface {
 	CreateExpense(userId int64, amount int64, description string) error
+	GetExpense(expenseId int64) (*Expense, error)
 	GetExpensesByUser(userId int64) ([]Expense, error)
 	UpdateExpense(expenseId int64, amount int64, description string) error
 	DeleteExpense(expenseId int64) error
+	StoreRecipt(expenseId int64) error
 }
 
 type DbFunctions interface {
@@ -73,6 +75,14 @@ func (s *PostgresStore) Migrate() error {
 
     ALTER TABLE expenses ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     ALTER TABLE users ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
+
+    CREATE TABLE IF NOT EXISTS recipt (
+        id SERIAL PRIMARY KEY,
+        expense_id int NOT NULL,
+        FOREIGN KEY (expense_id) REFERENCES expenses (id)
+    );
+
+    ALTER TABLE recipt ADD COLUMN IF NOT EXISTS created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;
     `
 	_, err := s.db.Exec(query)
 	return err

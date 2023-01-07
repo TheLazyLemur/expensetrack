@@ -1,5 +1,11 @@
 package main
 
+import (
+	"io"
+	"mime/multipart"
+	"os"
+)
+
 func (s *PostgresStore) CreateExpense(userId int64, amount int64, description string) error {
     query := `
     INSERT INTO expenses (user_id, amount, description) VALUES ($1, $2, $3);
@@ -64,6 +70,19 @@ func (s *PostgresStore) DeleteExpense(expenseId int64) error {
     return err
 }
 
-func (s *PostgresStore) StoreRecipt(expenseId int64) error {
-    panic("Not implemented")
+func (s *PostgresStore) StoreRecipt(expenseId int64, file multipart.File) error {
+    id := GenerateUuid()
+
+    f, err := os.Create("./recipts/" + id)
+    if err != nil {
+        return err 	
+    }
+
+    defer f.Close()
+
+    if _, err = io.Copy(f, file); err != nil {
+        return err
+    }
+
+    return nil
 }

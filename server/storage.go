@@ -2,6 +2,8 @@ package main
 
 import (
 	"database/sql"
+	"mime/multipart"
+
 	_ "github.com/lib/pq"
 )
 
@@ -19,7 +21,7 @@ type ExpenseStorer interface {
 	GetExpensesByUser(userId int64) ([]Expense, error)
 	UpdateExpense(expenseId int64, amount int64, description string) error
 	DeleteExpense(expenseId int64) error
-	StoreRecipt(expenseId int64) error
+	StoreRecipt (expenseId int64, file multipart.File) error 
 }
 
 type DbFunctions interface {

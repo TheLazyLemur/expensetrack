@@ -3,9 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"io"
 	"net/http"
-	"os"
 	"strconv"
 
 	"github.com/gorilla/mux"
@@ -110,19 +108,8 @@ func (s *APIServer) handleUploadExpenseReceipt(w http.ResponseWriter, r *http.Re
 	
 	defer file.Close()
 
-	id := GenerateUuid()
+	s.Storer.StoreRecipt(1, file)
 
-	f, err := os.Create("./recipts/" + id)
-	if err != nil {
-		return err 	
-	}
-
-	defer f.Close()
-
-	if _, err = io.Copy(f, file); err != nil {
-		return err
-	}
-
-	panic("not implemented")
+	return WriteJson(w, http.StatusOK, "recipt uploaded")
 }
 

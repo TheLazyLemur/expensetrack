@@ -84,5 +84,10 @@ func (s *PostgresStore) StoreRecipt(expenseId int64, file multipart.File) error 
         return err
     }
 
-    return nil
+    query := `
+    INSERT INTO recipt (expense_id, file_name) VALUES ($1, $2);
+    `
+
+    _, err = s.db.Exec(query, expenseId, id)
+    return err
 }

@@ -81,6 +81,7 @@ func (s *PostgresStore) Migrate() error {
     CREATE TABLE IF NOT EXISTS recipt (
         id SERIAL PRIMARY KEY,
         expense_id int NOT NULL,
+        file_name varchar(255) NOT NULL,
         FOREIGN KEY (expense_id) REFERENCES expenses (id)
     );
 

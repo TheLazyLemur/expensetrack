@@ -108,8 +108,11 @@ func (s *APIServer) handleUploadExpenseReceipt(w http.ResponseWriter, r *http.Re
 	
 	defer file.Close()
 
-	s.Storer.StoreRecipt(1, file)
+	err = s.Storer.StoreReceipt(1, file)
+	if err != nil {
+		return err 	
+	}
 
-	return WriteJson(w, http.StatusOK, "recipt uploaded")
+	return WriteJson(w, http.StatusOK, "receipt uploaded")
 }
 

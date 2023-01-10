@@ -1,6 +1,7 @@
 package main
 
 import (
+	"database/sql"
 	"io"
 	"mime/multipart"
 	"os"
@@ -70,24 +71,69 @@ func (s *PostgresStore) DeleteExpense(expenseId int64) error {
     return err
 }
 
-func (s *PostgresStore) StoreRecipt(expenseId int64, file multipart.File) error {
-    id := GenerateUuid()
+func (s *PostgresStore) StoreReceipt(expenseId int64, file multipart.File) error {
+    fc := make(chan error)
+    dbc := make(chan error)
 
-    f, err := os.Create("./recipts/" + id)
+    tx, err := s.db.Begin()
+
     if err != nil {
         return err 	
     }
 
-    defer f.Close()
+    id := GenerateUuid()
+
+    go func(id string) {
+        err := SaveFile(id, file)
+        fc <- err
+    }(id)
+
+    go func(expenseId int64, id string, tx *sql.Tx){
+        err := InsertReceipt(expenseId, id, tx)
+        dbc <- err
+    }(expenseId, id, tx)
+
+
+    for i := 0; i < 2; i++ {
+        select {
+            case err1 := <-fc:
+            if err1 != nil {
+                tx.Rollback()
+                os.Remove("./receipts/" + id)
+                return err1 
+            }
+            case err2 := <-dbc:
+            if err2 != nil {
+                tx.Rollback()
+                os.Remove("./receipts/" + id)
+                return err2
+            }
+        }
+    }
+
+    return tx.Commit()
+}
+
+func InsertReceipt(expenseId int64, id string, tx *sql.Tx) error {
+    query := `
+    INSERT INTO receipt (expense_id, file_name) VALUES ($1, $2);
+    `
+
+    _, err := tx.Exec(query, expenseId, id)
+    return err
+}
+
+func SaveFile(id string, file multipart.File) error {
+    f, err := os.Create("./receipts/" + id)
+    if err != nil {
+        return err 	
+    }
 
     if _, err = io.Copy(f, file); err != nil {
         return err
     }
 
-    query := `
-    INSERT INTO recipt (expense_id, file_name) VALUES ($1, $2);
-    `
+    defer f.Close()
 
-    _, err = s.db.Exec(query, expenseId, id)
-    return err
+    return nil
 }
